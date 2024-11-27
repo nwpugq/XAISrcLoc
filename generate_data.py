@@ -59,6 +59,7 @@ for data_split in ['train','val','test']: # 3个集合的数据挨个处理
         # Add microphones to 3D room
 
 
+        # att的这两个参数根本没用到，是多余的；fs与48行左右的fs = corpus[corpus_idxs[j]].fs冲撞了，这二者有一个是多余的
         att_diff = 15.0  # Attenuation when start using the diffuse reverberation model [dB]
         att_max = 60.0  # Attenuation at the end of the simulation [dB]
         fs = 16000.0  # Sampling frequency [Hz]
