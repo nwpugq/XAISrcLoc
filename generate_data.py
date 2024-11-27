@@ -30,7 +30,7 @@ import torch
 room_dim = [3.6, 8.2, 2.4]  # meters
 e_absorption, max_order = pra.inverse_sabine(T60, room_dim)
 
-for data_split in ['train','val','test']:
+for data_split in ['train','val','test']: # 3个集合的数据挨个处理
     print('Computing '+str(data_split) + ' data')
 
     if data_split == 'train':
@@ -47,7 +47,7 @@ for data_split in ['train','val','test']:
         signal = corpus[corpus_idxs[j]].data
         fs = corpus[corpus_idxs[j]].fs
 
-        # Convert signal to float
+        # Convert signal to float 归一化
         signal = signal / (np.max(np.abs(signal)))
 
         # Compute Signal Correlation Time
@@ -65,32 +65,33 @@ for data_split in ['train','val','test']:
 
         beta = gpuRIR.beta_SabineEstimation(room_dim, T60)  # Reflection coefficients
         Tmax = T60
-        nb_img = gpuRIR.t2n(Tmax, room_dim)  # Number of image sources in each dimension
-        RIRs = gpuRIR.simulateRIR(room_dim, beta, np.expand_dims(source_position,1).T, mics.T, nb_img, Tmax, fs)[0]
+        nb_img = gpuRIR.t2n(Tmax, room_dim)  # Number of image sources in each dimension nb的意思是Number，图像源在每个维度的个数
+        RIRs = gpuRIR.simulateRIR(room_dim, beta, np.expand_dims(source_position,1).T, mics.T, nb_img, Tmax, fs)[0] # 传递参数给这个函数，生成RIR
 
+        # 这块内容是将RIR与声源信号卷积得到理想的观测信号（具体操作是先变换到频域做乘积，后做IFFT，即可得到时域信号），后面还要加上高斯白噪声
         fft_len = len(signal) +RIRs.shape[1] -1
         SIG = torch.fft.fft(torch.Tensor(signal),n=fft_len)
         RIRs_fft = torch.fft.fft(torch.tensor(RIRs),n=fft_len, dim=1)
         signal_conv = torch.fft.ifft(torch.multiply(SIG, RIRs_fft),dim=1)
 
-        # AWGN
+        # AWGN 加性高斯白噪声
         noisy_signal_conv, noise = utils.add_white_gaussian_noise(signal_conv.detach().numpy(), SNR)
         noisy_signal_conv = torch.Tensor(noisy_signal_conv)
 
-        # Split in windows
-        N_wins = int(noisy_signal_conv.shape[-1]/window_size)
+        # Split in windows 加窗分帧
+        N_wins = int(noisy_signal_conv.shape[-1]/window_size) # 信号长度（样本点数除以窗长）
         frames = torch.reshape(noisy_signal_conv[:,:N_wins*window_size],(n_mic,N_wins,window_size))
-        win_sig  = torch.permute(frames, (0,2,1))
+        win_sig  = torch.permute(frames, (0,2,1)) # 从这两行代码可以看出，win_sig其实是对noisy_signal_conv做了形状上的改变而已，当然也有少量长度的丢失（因为做了切片操作）
 
         # Save data
         if data_split =='train' or data_split == 'val':
-            train_path = os.path.join(path,data_split)
-            train_split_path = os.path.join(train_path, 'SNR_' + str(SNR) + '_T60_' + str(T60))
+            train_path = os.path.join(path,data_split) # 训练数据的地址 文件夹
+            train_split_path = os.path.join(train_path, 'SNR_' + str(SNR) + '_T60_' + str(T60)) # 训练数据的地址 加上 数据的一点信息 文件夹
             if not os.path.exists(train_path):
                 os.makedirs(train_path)
             if not os.path.exists(train_split_path):
                 os.makedirs(train_split_path)
-            np.savez(file=os.path.join(train_split_path,str(j)), signal=noisy_signal_conv,
+            np.savez(file=os.path.join(train_split_path,str(j)), signal=noisy_signal_conv, # 这里的file是文件名，所以str(j)是数据文件的名字，后缀名是.npz
                      src_pos=source_position,
                      win_sig=win_sig)
 
