@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-windows = [1280, 2560, 5120]
+windows = [1280, 2560, 5120] #生成语音信号的样本点
 window_size = 5120
 if window_size == 5120:
     fc_size = 3712
