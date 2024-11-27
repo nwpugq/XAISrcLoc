@@ -1,12 +1,12 @@
-import argparse
-import os
-import torch.nn
+import argparse # 添加命令行参数解析器
+import os # 组合文件路径
+import torch.nn # 神经网络相关的库
 import numpy as np
-from tqdm import tqdm
-from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm # 添加循环进度条
+from torch.utils.tensorboard import SummaryWriter # 记录训练日志
 import network_lib
-import datetime
-from params import window_size
+import datetime # 获取系统时间
+from params import window_size # 语音信号的样本点
 parser = argparse.ArgumentParser(description='Endtoend training')
 parser.add_argument('--gpu', type=str, help='gpu', default='2')
 parser.add_argument('--data_path', type=str,  default='/nas/home/lcomanducci/xai_src_loc/endtoend_src_loc2/dataset2')
@@ -26,7 +26,7 @@ SNR = args.SNR
 class EndToEndDataset(torch.utils.data.Dataset):
     def __init__(self, data_path, window_size):
         self.data_path = data_path
-        self.files = [os.path.join(self.data_path,path) for path in os.listdir(self.data_path)]
+        self.files = [os.path.join(self.data_path,path) for path in os.listdir(self.data_path)] # 所有的训练数据组成的列表
         self.window_size = window_size
     def __len__(self):
         return len(self.files)
@@ -34,7 +34,7 @@ class EndToEndDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         # Load data structure
 
-        data_structure = np.load(str(self.files[idx]))
+        data_structure = np.load(str(self.files[idx])) # 获取idx所指的训练数据，它是一个字典
 
         # Load windowed signal
 
