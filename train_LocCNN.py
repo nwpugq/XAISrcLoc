@@ -41,9 +41,9 @@ class EndToEndDataset(torch.utils.data.Dataset):
         win_sig = data_structure['win_sig']
 
         N_wins = win_sig.shape[-1]
-        idx_slice = torch.randint(low=0, high=N_wins,size=(1,))
+        idx_slice = torch.randint(low=0, high=N_wins,size=(1,)) # 随机选择一帧
         # N.B. transpose is due to channel first pytorch convention
-        win_sig_tensor = torch.from_numpy(win_sig)[:,:,idx_slice].squeeze(-1)
+        win_sig_tensor = torch.from_numpy(win_sig)[:,:,idx_slice].squeeze(-1) # 只选择多个分帧中的一帧作为输入数据
         win_sig_tensor = torch.Tensor(win_sig_tensor.detach().numpy())
 
 
@@ -52,7 +52,7 @@ class EndToEndDataset(torch.utils.data.Dataset):
         src_pos = torch.Tensor(src_pos)
 
 
-        return win_sig_tensor, src_pos
+        return win_sig_tensor, src_pos # 返回一帧信号和声源位置
 
 def train_epoch(train_dataloader, model, device,loss_fn,optimizer):
 
@@ -72,7 +72,7 @@ def train_epoch(train_dataloader, model, device,loss_fn,optimizer):
         optimizer.step()
 
         # Gather data and report
-        running_loss += loss.item()
+        running_loss += loss.item() # 将所有批次的损失求和，再求平均，表示这个阶段模型参数的性能好坏
     running_loss/=num_batches
     return running_loss
 
@@ -81,7 +81,7 @@ def val_epoch(val_dataloader, model, device,loss_fn):
     num_batches = len(val_dataloader.dataset)
     running_loss = 0.
 
-    with torch.no_grad():
+    with torch.no_grad(): # 不用求梯度
         for batch, (win_sig_batch, src_loc_batch) in enumerate(val_dataloader):
             win_sig_batch, src_loc_batch = win_sig_batch.to(device), src_loc_batch.to(device)
             src_loc_batch_est = model(win_sig_batch)
@@ -99,6 +99,7 @@ def main():
     saved_model_path='/nas/home/lcomanducci/xai_src_loc/endtoend_src_loc2/models/loccnn/model'+'_SNR_'+str(SNR)+'_T60_'+str(T60)+'.pth'
     model = network_lib.EndToEndLocModel()
     model = model.to(device)
+    
     loss_fn = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     epochs = 1000
@@ -121,30 +122,39 @@ def main():
     val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, shuffle=True,num_workers=4)
 
     model = model.cuda()
-    early_stop_patience = 200
-    for n_e in tqdm(range(epochs)):
+    early_stop_patience = 200 # 早停耐心
+    for n_e in tqdm(range(epochs)): # n_e：number of epoch
         model.train(True)
         train_loss = train_epoch(train_dataloader, model, device,loss_fn,optimizer)
+        
         model.eval()
         val_loss = val_epoch(val_dataloader, model, device,loss_fn)
-        scheduler.step(val_loss)
+        
+        scheduler.step(val_loss) # 减少学习率
+        
         # Write to tensorboard
         writer.add_scalar('Loss/train', train_loss, n_e)
         writer.add_scalar('Loss/val', val_loss, n_e)
         writer.flush()
+        
         # Early Stopping and best checkpoint model
         # Handle saving best model + early stopping
+
+        # 初始化操作（最佳模型）
         if n_e == 0:
             val_loss_best = val_loss
             early_stop_counter = 0
             saved_model_path = saved_model_path
             torch.save(model.state_dict(), saved_model_path)
+
+        # 更新操作（最佳模型）
         if n_e > 0 and val_loss < val_loss_best:
             saved_model_path = saved_model_path
             torch.save(model.state_dict(), saved_model_path)
             val_loss_best = val_loss
             # print(f'Model saved epoch{n_e}')
             early_stop_counter = 0
+            
         else:
             early_stop_counter += 1
             print('Patience status: ' + str(early_stop_counter) + '/' + str(early_stop_patience))
