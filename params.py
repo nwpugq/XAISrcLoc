@@ -69,7 +69,7 @@ if PLOT_SETUP:
 
 # audio signals
 corpus = pra.datasets.CMUArcticCorpus(download=True) # 下载语音语料库
-idx_tracks = rng.choice(np.arange(len(corpus)),size=src_pos_train.shape[0]+src_pos_val.shape[0]+src_pos_test.shape[0]) # 将语料库随机划分为3个集合
+idx_tracks = rng.choice(np.arange(len(corpus)),size=src_pos_train.shape[0]+src_pos_val.shape[0]+src_pos_test.shape[0]) # 从语料库中随机抽取所需的若干个语音作为声源的语音
 # 直接按照索引号从小到大分配给各个集合对应数量的语料库中语音的索引
 idx_tracks_train=idx_tracks[:src_pos_train.shape[0]]
 idx_tracks_val=idx_tracks[src_pos_train.shape[0]:src_pos_train.shape[0]+src_pos_val.shape[0]]
