@@ -28,7 +28,7 @@ import torch
 
 # Specify room dimensions
 room_dim = [3.6, 8.2, 2.4]  # meters
-e_absorption, max_order = pra.inverse_sabine(T60, room_dim)
+e_absorption, max_order = pra.inverse_sabine(T60, room_dim) # 这两个参数根本没用到，是多余的
 
 for data_split in ['train','val','test']: # 3个集合的数据挨个处理
     print('Computing '+str(data_split) + ' data')
@@ -43,7 +43,7 @@ for data_split in ['train','val','test']: # 3个集合的数据挨个处理
         sources_pos = src_pos_test
         corpus_idxs = idx_tracks_test
 
-    for j in tqdm(range(len(sources_pos))):
+    for j in tqdm(range(len(sources_pos))): # 对于每个声源位置
         signal = corpus[corpus_idxs[j]].data
         fs = corpus[corpus_idxs[j]].fs
 
@@ -64,7 +64,7 @@ for data_split in ['train','val','test']: # 3个集合的数据挨个处理
         att_max = 60.0  # Attenuation at the end of the simulation [dB]
         fs = 16000.0  # Sampling frequency [Hz]
 
-        beta = gpuRIR.beta_SabineEstimation(room_dim, T60)  # Reflection coefficients
+        beta = gpuRIR.beta_SabineEstimation(room_dim, T60)  # Reflection coefficients 房间反射系数
         Tmax = T60
         nb_img = gpuRIR.t2n(Tmax, room_dim)  # Number of image sources in each dimension nb的意思是Number，图像源在每个维度的个数
         RIRs = gpuRIR.simulateRIR(room_dim, beta, np.expand_dims(source_position,1).T, mics.T, nb_img, Tmax, fs)[0] # 传递参数给这个函数，生成RIR
