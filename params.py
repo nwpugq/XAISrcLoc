@@ -20,20 +20,20 @@ c = 343
 # Add microphones to 3D room
 height_mic = 1.2
 mic_center = np.array([1.7, 7.0, 0.96])
-R = pra.linear_2D_array(mic_center[:2], M=n_mic, phi=0, d=0.15) # 这只是平面二维阵列函数，生成二维的坐标
+R = pra.linear_2D_array(mic_center[:2], M=n_mic, phi=0, d=0.15) # 这只是平面二维阵列函数，生成二维的坐标，论文上的孔径是0.16m，因为有16个麦克风，所以阵列的整体长度是15*0.15m=2.25m
 R = np.concatenate((R, np.ones((1, n_mic)) * height_mic), axis=0) # 再连接上一个维度（高度），生成三维的坐标
 mics = pra.MicrophoneArray(R, fs).R
 
-SEED =5000 # 设定种子，方便复现
+SEED = 5000 # 设定种子，方便复现
 height_mic = 1.2
 nx, ny = 65, 65
-X, Y = np.meshgrid(np.linspace(mics[0,:].min()+0.25, mics[0,:].max()-0.25, nx), np.linspace(4.5, 6.5, ny))
+X, Y = np.meshgrid(np.linspace(mics[0,:].min()+0.25, mics[0,:].max()-0.25, nx), np.linspace(4.5, 6.5, ny)) # 阵列的整体长度是2.25m，所以两头各缩0.25m，最后得到的网格大小就是1.75m*2m
 
 # 与生成麦克风阵列的位置的方法相似，先确定二维的坐标，然后连接一个维度，形成三维坐标
-src_pos = np.array((np.ravel(X), np.ravel(Y))).T
+src_pos = np.array((np.ravel(X), np.ravel(Y))).T # 经过墨西哥草帽函数后，X和Y均为矩阵，ravel函数将矩阵展平为一维数组，再将两个展平后的一维数组 组合成一个二维数组，并转置成n*2维的矩阵
 rng = np.random.default_rng(seed=SEED)
-height_srcs = rng.uniform(low=1, high=1.5,size=(src_pos.shape[0],))
-src_pos = np.concatenate((src_pos, np.expand_dims(height_srcs,axis=-1)),axis=-1)
+height_srcs = rng.uniform(low=1, high=1.5,size=(src_pos.shape[0],)) # 所有声源的高度都在[1m, 1.5m]之间，且服从均匀分布
+src_pos = np.concatenate((src_pos, np.expand_dims(height_srcs,axis=-1)),axis=-1) # 在最后一个维度上连接，维度由(n, 2)变成(n, 3)
 max_src, min_src = np.max(src_pos), np.min(src_pos)
 
 # 做归一化
