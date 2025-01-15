@@ -51,7 +51,7 @@ for data_split in ['train','val','test']: # 3个集合的数据挨个处理
         signal = signal / (np.max(np.abs(signal)))
 
         # Compute Signal Correlation Time
-        sig_corr_time = utils.compute_correlation_time(signal)
+        sig_corr_time = utils.compute_correlation_time(signal) # 这个参数实际上不影响训练，但是后面训练完了之后，分析信号的性能时会用到
 
 
         # Add source to 3D room (set max_order to a low value for a quick, but less accurate, RIR)
