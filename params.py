@@ -34,7 +34,7 @@ src_pos = np.array((np.ravel(X), np.ravel(Y))).T # 经过墨西哥草帽函数�
 rng = np.random.default_rng(seed=SEED)
 height_srcs = rng.uniform(low=1, high=1.5,size=(src_pos.shape[0],)) # 所有声源的高度都在[1m, 1.5m]之间，且服从均匀分布
 src_pos = np.concatenate((src_pos, np.expand_dims(height_srcs,axis=-1)),axis=-1) # 在最后一个维度上连接，维度由(n, 2)变成(n, 3)
-max_src, min_src = np.max(src_pos), np.min(src_pos)
+max_src, min_src = np.max(src_pos), np.min(src_pos) # 将变量展平为一维数据，再取所有数值中的最大或最小值
 
 # 做归一化
 src_pos_norm = (src_pos-min_src)/(max_src-min_src)
