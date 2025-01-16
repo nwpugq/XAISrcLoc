@@ -19,7 +19,7 @@ c = 343
 
 # Add microphones to 3D room
 height_mic = 1.2
-mic_center = np.array([1.7, 7.0, 0.96])
+mic_center = np.array([1.7, 7.0, 0.96]) # 这里的高度0.96m根本没用，后面所有麦克风的高度都被统一设置成了1.2m
 R = pra.linear_2D_array(mic_center[:2], M=n_mic, phi=0, d=0.15) # 这只是平面二维阵列函数，生成二维的坐标，论文上的孔径是0.16m，因为有16个麦克风，所以阵列的整体长度是15*0.15m=2.25m
 R = np.concatenate((R, np.ones((1, n_mic)) * height_mic), axis=0) # 再连接上一个维度（高度），生成三维的坐标
 mics = pra.MicrophoneArray(R, fs).R
